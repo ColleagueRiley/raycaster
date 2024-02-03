@@ -59,12 +59,7 @@ unsigned char icon[4 * 9 * 9] = {
 
 int main() {
     RSGL_window* win = RSGL_createWindow("name", RSGL_RECT(0, 0, 640, 400), RGFW_CENTER | RSGL_HIDE_MOUSE);
-    SetCursorPos(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
-
-    void* hCrosshairCursor = LoadCursor(NULL, IDC_CROSS);
-    SetCursor(hCrosshairCursor);
-
-    win->cursor = LoadCursor(NULL, IDC_CROSS);
+    //SetCursorPos(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
 
     RSGL_pointF player = RSGL_POINTF(2, 2); 
     float z = 0, jumpZ = 0;
@@ -81,7 +76,7 @@ int main() {
     MAP_CORD(1, 0) = wallTexture;
 
     RSGL_setFont(RSGL_loadFont("SansPosterBold.ttf"));*/
-    
+
     bool running = true;
 
     RSGL_point mouse;
@@ -106,7 +101,7 @@ int main() {
                     playerAngle -= 2;
                 //z -= (win->event.y - mouse.y);
                 
-                SetCursorPos(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
+//                SetCursorPos(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
                 mouse = RSGL_POINT(win->event.x, win->event.y);
             }
 
