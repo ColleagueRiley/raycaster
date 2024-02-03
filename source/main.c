@@ -55,11 +55,9 @@ unsigned char icon[4 * 9 * 9] = {
 };
 
 
-#include <windows.h>
-
 int main() {
     RSGL_window* win = RSGL_createWindow("name", RSGL_RECT(0, 0, 640, 400), RGFW_CENTER | RSGL_HIDE_MOUSE);
-    //SetCursorPos(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
+    //RGFW_window_moveMouse(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
 
     RSGL_pointF player = RSGL_POINTF(2, 2); 
     float z = 0, jumpZ = 0;
@@ -79,7 +77,8 @@ int main() {
 
     bool running = true;
 
-    RSGL_point mouse;
+    RSGL_point mouse = RSGL_POINT(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
+    RGFW_window_moveMouse(win, win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
 
     while (running) {
         while (RSGL_window_checkEvent(win)) {
@@ -93,16 +92,17 @@ int main() {
             vector2D playerCompLR = VECTOR2D(cos(DEG2RAD * (playerAngle - 180)) * playerVelocity,  sin(DEG2RAD * (playerAngle - 180)) * playerVelocity);
 
             if (win->event.type == RSGL_mousePosChanged) {
-                int* gmouse = RSGL_window_getGlobalMousePoint(win);
-                if (gmouse[0] == ((win->r.x + (win->r.w / 2)) + 3))
-                    playerAngle += 5;
-                
-                if (gmouse[0] == ((win->r.x + (win->r.w / 2)) - 5))
+                if (win->event.x > (win->r.w / 2))
+                    playerAngle += 2;
+                if (win->event.x < (win->r.w / 2))
                     playerAngle -= 2;
-                //z -= (win->event.y - mouse.y);
                 
-//                SetCursorPos(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
-                mouse = RSGL_POINT(win->event.x, win->event.y);
+                if (win->event.y > (win->r.h / 2))
+                    z -= 5;
+                if (win->event.y < (win->r.h / 2))
+                    z += 5;
+                
+                RGFW_window_moveMouse(win, win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
             }
 
             if (win->event.type == RGFW_keyPressed) {
