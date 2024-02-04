@@ -6,16 +6,16 @@
 #include "vector.h"
 
 u8 map[] = {
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
-    1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-    1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
-    1, 0, 0, 1, 0, 1, 1, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+    2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+    2, 0, 0, 2, 2, 0, 2, 0, 0, 2,
+    2, 0, 0, 2, 0, 0, 2, 0, 0, 2,
+    2, 0, 0, 2, 0, 0, 2, 0, 0, 2,
+    2, 0, 0, 2, 0, 2, 2, 0, 0, 2,
+    2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+    2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
 };
 
 float hMap[] = {
@@ -39,6 +39,10 @@ float hMap[] = {
 
 #define HMAP_CORD(x, y) hMap[(x) + (y) * MAP_WIDTH]
 #define HMAP_CORDV(v) HMAP_CORD((size_t)v.x, (size_t)v.y)
+
+#define RGL_LINES_2D                                0x0011      /* GL_LINES */
+#define RGL_TRIANGLES_2D                            0x0014      /* GL_TRIANGLES */
+#define RGL_QUADS_2D                                0x0017      /* GL_QUADS */
 
 unsigned char icon[4 * 9 * 9] = {
     0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,   0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x00,
@@ -70,10 +74,9 @@ int main() {
 
     float playerVelocity = 0.25;
 
-    /*u32 wallTexture = RSGL_loadImage("wall.png");
-    MAP_CORD(1, 0) = wallTexture;
-
-    RSGL_setFont(RSGL_loadFont("SansPosterBold.ttf"));*/
+    u32 wallTexture = RSGL_loadImage("wall.png");
+  
+//    RSGL_setFont(RSGL_loadFont("SansPosterBold.ttf"));
 
     bool running = true;
 
@@ -184,15 +187,33 @@ int main() {
 
                 for (u32 i = 0; i < vIndex; i++) {
                     vector2D ray = vectors[i];
-                    RSGL_drawRect(RSGL_RECT(i, z + (defaultHeight - wallHeight), 1, z + defaultHeight + wallHeight), color);
+
+                    float distance = vector_dist(ray, player) * cos(DEG2RAD * (rayAngle - playerAngle));
+                    float wallHeight = (size_t)(float)((float)(defaultHeight / distance))  + HMAP_CORDV(ray);     
+                    
+                    {           
+                        RSGL_rectF r = RSGL_RECTF(i, z + (defaultHeight - wallHeight), 1, z + defaultHeight + wallHeight);
+                        RSGL_point3DF points[] = {{r.x, r.y, 0.0f}, {r.x, r.y + r.h, 0.0f}, {r.x + r.w, r.y + r.h, 0.0f}, {r.x + r.w, r.y, 0.0f}};
+                        RSGL_point3DF texPoints[] = {{((i32)ray.x) - ray.x, 0.0f, 0.0f}, {((i32)ray.x) - ray.x, 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1 , 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1, 0.0f, 0.0f}};
+
+                        RSGL_basicDraw(RGL_QUADS_2D, (RSGL_point3DF*)points, (RSGL_point3DF*)texPoints, r, RSGL_RGB(255, 255, 255), 4);
+                    }
                 }
                 
                 if (HMAP_CORDV(ray) == 20)
                     color = RSGL_RGB(255, 0, 0);
 
-                RSGL_drawRect(RSGL_RECT(i, z + (defaultHeight - wallHeight), 1, z + defaultHeight + wallHeight), color);
-                
-                RSGL_drawRectF(RSGL_RECTF(i, z + defaultHeight + wallHeight, 1, win->r.h), RSGL_RGB(0, 255, 0));                         
+                {                
+                    RSGL_rectF r = RSGL_RECTF(i, z + (defaultHeight - wallHeight), 1, z + defaultHeight + wallHeight);
+                    RSGL_point3DF points[] = {{r.x, r.y, 0.0f}, {r.x, r.y + r.h, 0.0f}, {r.x + r.w, r.y + r.h, 0.0f}, {r.x + r.w, r.y, 0.0f}};
+                    RSGL_point3DF texPoints[] = {{((i32)ray.x) - ray.x, 0.0f, 0.0f}, {((i32)ray.x) - ray.x, 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1 , 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1, 0.0f, 0.0f}};
+
+                    RSGL_basicDraw(RGL_QUADS_2D, (RSGL_point3DF*)points, (RSGL_point3DF*)texPoints, r, RSGL_RGB(255, 255, 255), 4);
+                    RSGL_setTexture(MAP_CORDV(ray));  
+                }
+
+                RSGL_drawRectF(RSGL_RECTF(i, z + defaultHeight + wallHeight, 1, win->r.h), RSGL_RGB(0, 255, 0));                   
+                RSGL_setTexture(1);
             }
             
             else 
@@ -200,7 +221,7 @@ int main() {
 
             rayAngle += ((float)fov / win->r.w);
         }
-        
+    
         RSGL_window_clear(win, RSGL_RGB(0, 0, 0));
     }
 
