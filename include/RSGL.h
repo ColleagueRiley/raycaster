@@ -603,6 +603,13 @@ RSGLDEF bool RSGL_rectCollidePoint(RSGL_rect r, RSGL_point p);
 RSGLDEF bool RSGL_rectCollide(RSGL_rect r, RSGL_rect r2);
 RSGLDEF bool RSGL_pointCollide(RSGL_point p, RSGL_point p2);
 
+RSGLDEF bool RSGL_circleCollidePointF(RSGL_circleF c, RSGL_pointF p);
+RSGLDEF bool RSGL_circleCollideRectF(RSGL_circleF c, RSGL_rectF r);
+RSGLDEF bool RSGL_circleCollideF(RSGL_circleF cir1, RSGL_circleF cir2);
+RSGLDEF bool RSGL_rectCollidePointF(RSGL_rectF r, RSGL_pointF p);
+RSGLDEF bool RSGL_rectCollideF(RSGL_rectF r, RSGL_rectF r2);
+RSGLDEF bool RSGL_pointCollideF(RSGL_pointF p, RSGL_pointF p2);
+
 #endif /* ndef RSGL_H */
 
 /*
@@ -2010,4 +2017,8 @@ bool RSGL_circleCollide(RSGL_circle cir, RSGL_circle cir2) {
 bool RSGL_rectCollidePoint(RSGL_rect r, RSGL_point p){ return (p.x >= r.x &&  p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h); }
 bool RSGL_rectCollide(RSGL_rect r, RSGL_rect r2){ return (r.x + r.w >= r2.x && r.x <= r2.x + r2.w && r.y + r.h >= r2.y && r.y <= r2.y + r2.h); }
 bool RSGL_pointCollide(RSGL_point p, RSGL_point p2){ return (p.x == p2.x && p.y == p2.y); }
+
+bool RSGL_rectCollidePointF(RSGL_rectF r, RSGL_pointF p){ return (p.x >= r.x &&  p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h); }
+bool RSGL_rectCollideF(RSGL_rectF r, RSGL_rectF r2){ return (r.x + r.w >= r2.x && r.x <= r2.x + r2.w && r.y + r.h >= r2.y && r.y <= r2.y + r2.h); }
+bool RSGL_pointCollideF(RSGL_pointF p, RSGL_pointF p2){ return (p.x == p2.x && p.y == p2.y); }
 #endif /* RSGL_IMPLEMENTATION */
