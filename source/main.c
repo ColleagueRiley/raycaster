@@ -28,7 +28,7 @@ float hMap[] = {
     20.0, 0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 0.0, 20.0,
     20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0,
     20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0,
-    20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0,
+    200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 20.0,
 };
 
 #define MAP_WIDTH 10
@@ -44,38 +44,76 @@ float hMap[] = {
 #define RGL_TRIANGLES_2D                            0x0014      /* GL_TRIANGLES */
 #define RGL_QUADS_2D                                0x0017      /* GL_QUADS */
 
-unsigned char icon[4 * 9 * 9] = {
-    0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,   0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,   0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,   0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,   0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x00,
+RSGL_window* win;
+vector2D player;
+float z;
+float playerAngle;
+
+i32 precision = 64;
+u8 fov = 60;
+
+void castRay(vector2D ray, float rayAngle, u32 x) {
+    float defaultHeight = (win->r.h / 4.0f);
+
+    vector2D rayComp = VECTOR2D(cos(DEG2RAD * rayAngle) / precision, sin(DEG2RAD * rayAngle) / precision);
     
-    0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF,    0xFF, 0xFF, 0x00, 0xFF,    0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0xFF,    0xFF, 0xFF, 0x00, 0xFF,    0xFF, 0xFF, 0x00, 0xFF,    
+    do {   
+        vector2D next = vector_add(ray, rayComp);
+
+        if (RSGL_rectCollidePointF(RSGL_RECTF(0, 0, MAP_WIDTH, MAP_HEIGHT), next) == false)
+            break;
+        
+        if (MAP_CORDV(ray) && HMAP_CORDV(ray) < HMAP_CORDV(next))
+            castRay(next, rayAngle, x);
+        
+        ray = next; 
+    } while (MAP_CORDV(ray) == 0 || HMAP_CORDV(ray) < HMAP_CORDV(vector_add(ray, rayComp)));
     
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,   0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,   0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,  0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,   0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x00, 0x00,     0xFF, 0xFF, 0x00, 0xFF,   0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x00,
-};
+    RSGL_pointF rayI = ray;
+
+    /* 
+        get the distance, times the cos diff between the ray and the player  
+        it is a quick fix to make sure the angle is properly lined up with the player view angle
+    */           
+    float distance = vector_dist(ray, player) * cos(DEG2RAD * (rayAngle - playerAngle));
+    float wallHeight = (size_t)(float)((float)(defaultHeight / distance))  + HMAP_CORDV(ray);
+    
+    if (RGFW_isPressedI(win, RGFW_Tab) == false) {                
+        RSGL_drawRectF(RSGL_RECTF(x, 0, 1, z + (defaultHeight - wallHeight)), RSGL_RGBA(0, 255, 255, 0));
+        RSGL_color color = RSGL_RGB(100, 100, 100);
+        
+        if (HMAP_CORDV(ray) == 20)
+            color = RSGL_RGB(255, 0, 0);
+        
+        RSGL_rectF r = RSGL_RECTF(x, z + (defaultHeight - wallHeight), 1, z + defaultHeight + wallHeight);
+        RSGL_point3DF points[] = {{r.x, r.y, 0.0f}, {r.x, r.y + r.h, 0.0f}, {r.x + r.w, r.y + r.h, 0.0f}, {r.x + r.w, r.y, 0.0f}};
+        RSGL_point3DF texPoints[] = {{((i32)ray.x) - ray.x, 0.0f, 0.0f}, {((i32)ray.x) - ray.x, 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1 , 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1, 0.0f, 0.0f}};
+
+        RSGL_basicDraw(RGL_QUADS_2D, (RSGL_point3DF*)points, (RSGL_point3DF*)texPoints, r, RSGL_RGB(255, 255, 255), 4);
+        RSGL_setTexture(MAP_CORDV(ray));  
+
+        RSGL_drawLineF(RSGL_POINTF(x, z + defaultHeight + wallHeight), RSGL_POINTF(x, win->r.h * 4), 1, RSGL_RGB(0, 255, 0));
+        RSGL_setTexture(1);
+    }
+    
+    else 
+        RSGL_drawLineF(vector_mul(player, VECTOR2D(20, 20)), vector_mul(ray, VECTOR2D(20, 20)), 1, RSGL_RGB(0, 255, 0));
+}
 
 
 int main() {
-    RSGL_window* win = RSGL_createWindow("name", RSGL_RECT(0, 0, 640, 400), RGFW_CENTER | RSGL_HIDE_MOUSE);
+    win = RSGL_createWindow("name", RSGL_RECT(0, 0, 640, 400), RGFW_CENTER | RSGL_HIDE_MOUSE);
     //RGFW_window_moveMouse(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
 
-    RSGL_pointF player = RSGL_POINTF(2, 2); 
-    float z = 0, jumpZ = 0;
-    float playerAngle = 90;
-
-    i32 precision = 64;
-    u8 fov = 60;
-    
-    float defaultHeight = (win->r.h / 4.0f);
+    player = RSGL_POINTF(2, 2); 
+    z = 0;
+    float jumpZ = 0;
+    playerAngle = 90;
 
     float playerVelocity = 0.25;
 
     u32 wallTexture = RSGL_loadImage("wall.png");
-    u32 wall2Texture = RSGL_loadImage("wall2.png");
+    u32 wall2Texture = RSGL_loadImage("wall.jpg");
   
 //    RSGL_setFont(RSGL_loadFont("SansPosterBold.ttf"));
 
@@ -151,77 +189,7 @@ int main() {
         float rayAngle = playerAngle - ((float)fov / 2.0f);
 
         for(size_t i = 0; i < win->r.w; i++) {
-            RSGL_pointF ray = player;
-
-            /*
-                x comp of ray / precision
-                y comp of ray / precision
-
-                This is so it checks one (block / precision) at a time
-            */
-            vector2D rayComp = VECTOR2D(cos(DEG2RAD * rayAngle) / precision, sin(DEG2RAD * rayAngle) / precision);
-            static vector2D vectors[20];
-            size_t vIndex = 0;
-
-            do { 
-                if (MAP_CORDV(ray) && HMAP_CORDV(ray) < HMAP_CORDV(vector_add(ray, rayComp))) {
-                    vectors[vIndex] = ray;
-                    vIndex++;
-                }
-
-                ray = vector_add(ray, rayComp); 
-            }
-            while (MAP_CORDV(ray) == 0 || HMAP_CORDV(ray) < HMAP_CORDV(vector_add(ray, rayComp)));
-            
-            RSGL_pointF rayI = ray;
-
-            /* 
-                get the distance, times the cos diff between the ray and the player  
-                it is a quick fix to make sure the angle is properly lined up with the player view angle
-            */           
-            float distance = vector_dist(ray, player) * cos(DEG2RAD * (rayAngle - playerAngle));
-            float wallHeight = (size_t)(float)((float)(defaultHeight / distance))  + HMAP_CORDV(ray);
-            
-            if (RGFW_isPressedI(win, RGFW_Tab) == false) {                
-                RSGL_drawRectF(RSGL_RECTF(i, 0, 1, z + (defaultHeight - wallHeight)), RSGL_RGB(0, 255, 255));
-                RSGL_color color = RSGL_RGB(100, 100, 100);
-
-                for (u32 i = 0; i < vIndex; i++) {
-                    vector2D ray = vectors[i];
-
-                    float distance = vector_dist(ray, player) * cos(DEG2RAD * (rayAngle - playerAngle));
-                    float wallHeight = (size_t)(float)((float)(defaultHeight / distance))  + HMAP_CORDV(ray);     
-                    
-                    {           
-                        RSGL_rectF r = RSGL_RECTF(i, z + (defaultHeight - wallHeight), 1, z + defaultHeight + wallHeight);
-                        RSGL_point3DF points[] = {{r.x, r.y, 0.0f}, {r.x, r.y + r.h, 0.0f}, {r.x + r.w, r.y + r.h, 0.0f}, {r.x + r.w, r.y, 0.0f}};
-                        RSGL_point3DF texPoints[] = {{((i32)ray.x) - ray.x, 0.0f, 0.0f}, {((i32)ray.x) - ray.x, 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1 , 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1, 0.0f, 0.0f}};
-
-                        RSGL_basicDraw(RGL_QUADS_2D, (RSGL_point3DF*)points, (RSGL_point3DF*)texPoints, r, RSGL_RGB(255, 255, 255), 4);
-                        RSGL_setTexture(MAP_CORDV(ray)); 
-                        printf("%i\n", MAP_CORDV(ray));
-                    }
-                }
-                
-                if (HMAP_CORDV(ray) == 20)
-                    color = RSGL_RGB(255, 0, 0);
-
-                {                
-                    RSGL_rectF r = RSGL_RECTF(i, z + (defaultHeight - wallHeight), 1, z + defaultHeight + wallHeight);
-                    RSGL_point3DF points[] = {{r.x, r.y, 0.0f}, {r.x, r.y + r.h, 0.0f}, {r.x + r.w, r.y + r.h, 0.0f}, {r.x + r.w, r.y, 0.0f}};
-                    RSGL_point3DF texPoints[] = {{((i32)ray.x) - ray.x, 0.0f, 0.0f}, {((i32)ray.x) - ray.x, 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1 , 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1, 0.0f, 0.0f}};
-
-                    RSGL_basicDraw(RGL_QUADS_2D, (RSGL_point3DF*)points, (RSGL_point3DF*)texPoints, r, RSGL_RGB(255, 255, 255), 4);
-                    RSGL_setTexture(MAP_CORDV(ray));  
-                }
-                
-                RSGL_drawLineF(RSGL_POINTF(i, z + defaultHeight + wallHeight), RSGL_POINTF(i, win->r.h * 4), 1, RSGL_RGB(0, 255, 0));
-                //RSGL_drawRectF(RSGL_RECTF(i, z + defaultHeight + wallHeight, 1, win->r.h), RSGL_RGB(0, 255, 0));                   
-                RSGL_setTexture(1);
-            }
-            
-            else 
-                RSGL_drawLineF(vector_mul(player, VECTOR2D(20, 20)), vector_mul(ray, VECTOR2D(20, 20)), 1, RSGL_RGB(0, 255, 0));
+            castRay(player, rayAngle, i);
 
             rayAngle += ((float)fov / win->r.w);
         }
