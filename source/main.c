@@ -9,10 +9,10 @@ u8 map[] = {
     2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
     2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
     2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
-    2, 0, 0, 2, 2, 0, 2, 0, 0, 2,
-    2, 0, 0, 2, 0, 0, 2, 0, 0, 2,
-    2, 0, 0, 2, 0, 0, 2, 0, 0, 2,
-    2, 0, 0, 2, 0, 2, 2, 0, 0, 2,
+    2, 0, 0, 3, 3, 0, 3, 0, 0, 2,
+    2, 0, 0, 3, 0, 0, 3, 0, 0, 2,
+    2, 0, 0, 3, 0, 0, 3, 0, 0, 2,
+    2, 0, 0, 3, 0, 3, 3, 0, 0, 2,
     2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
     2, 0, 0, 0, 0, 0, 0, 0, 0, 2,
     2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -75,6 +75,7 @@ int main() {
     float playerVelocity = 0.25;
 
     u32 wallTexture = RSGL_loadImage("wall.png");
+    u32 wall2Texture = RSGL_loadImage("wall2.png");
   
 //    RSGL_setFont(RSGL_loadFont("SansPosterBold.ttf"));
 
@@ -182,7 +183,7 @@ int main() {
             float wallHeight = (size_t)(float)((float)(defaultHeight / distance))  + HMAP_CORDV(ray);
             
             if (RGFW_isPressedI(win, RGFW_Tab) == false) {                
-                RSGL_drawRectF(RSGL_RECTF(i, 0, 1, z + (defaultHeight - wallHeight)), RSGL_RGB(0, 255, 255));         
+                RSGL_drawRectF(RSGL_RECTF(i, 0, 1, z + (defaultHeight - wallHeight)), RSGL_RGB(0, 255, 255));
                 RSGL_color color = RSGL_RGB(100, 100, 100);
 
                 for (u32 i = 0; i < vIndex; i++) {
@@ -197,6 +198,8 @@ int main() {
                         RSGL_point3DF texPoints[] = {{((i32)ray.x) - ray.x, 0.0f, 0.0f}, {((i32)ray.x) - ray.x, 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1 , 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1, 0.0f, 0.0f}};
 
                         RSGL_basicDraw(RGL_QUADS_2D, (RSGL_point3DF*)points, (RSGL_point3DF*)texPoints, r, RSGL_RGB(255, 255, 255), 4);
+                        RSGL_setTexture(MAP_CORDV(ray)); 
+                        printf("%i\n", MAP_CORDV(ray));
                     }
                 }
                 
@@ -211,8 +214,9 @@ int main() {
                     RSGL_basicDraw(RGL_QUADS_2D, (RSGL_point3DF*)points, (RSGL_point3DF*)texPoints, r, RSGL_RGB(255, 255, 255), 4);
                     RSGL_setTexture(MAP_CORDV(ray));  
                 }
-
-                RSGL_drawRectF(RSGL_RECTF(i, z + defaultHeight + wallHeight, 1, win->r.h), RSGL_RGB(0, 255, 0));                   
+                
+                RSGL_drawLineF(RSGL_POINTF(i, z + defaultHeight + wallHeight), RSGL_POINTF(i, win->r.h * 4), 1, RSGL_RGB(0, 255, 0));
+                //RSGL_drawRectF(RSGL_RECTF(i, z + defaultHeight + wallHeight, 1, win->r.h), RSGL_RGB(0, 255, 0));                   
                 RSGL_setTexture(1);
             }
             
