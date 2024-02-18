@@ -22,11 +22,11 @@ ifeq ($(detected_OS),Windows)
 endif
 ifeq ($(detected_OS),Darwin)        # Mac OS X
 	LIBS := -lm -framework Foundation -framework AppKit -framework OpenGL -framework CoreVideo
-	OUTPUT = NAME
+	OUTPUT = $(NAME)
 endif
 ifeq ($(detected_OS),Linux)
     LIBS := -I./include -lX11 -lGL -lm 
-	OUTPUT = NAME
+	OUTPUT = $(NAME)
 endif
 
 all:
@@ -36,6 +36,10 @@ all:
 debug:
 	make RSGL-$(detected_OS).o
 	$(CC) source/main.c RSGL-$(detected_OS).o -Wall -g -I./include $(LIBS) -o $(OUTPUT)
+	./$(OUTPUT)
+
+debugRSGL:
+	$(CC) source/main.c -D RSGL_IMPLEMENTATION -D RSGL_NO_AUDIO -Wall -g -I./include $(LIBS) -o $(OUTPUT)
 	./$(OUTPUT)
 
 RSGL-$(detected_OS).o:

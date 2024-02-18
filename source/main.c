@@ -28,7 +28,12 @@ float hMap[] = {
     20.0, 0.0, 0.0, 10.0, 0.0, 10.0, 10.0, 0.0, 0.0, 20.0,
     20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0,
     20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 20.0,
-    200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 20.0,
+    /*200.0, 200.0, 200.0, 200.0, -10.0, 200.0, 200.0, 200.0, 200.0, 20.0,
+    200.0, 200.0, 200.0, 200.0, -8.0, 200.0, 200.0, 200.0, 200.0, 20.0,
+    200.0, 200.0, 200.0, 200.0, -6.0, 200.0, 200.0, 200.0, 200.0, 20.0,
+    200.0, 200.0, 200.0, 200.0, -4.0, 200.0, 200.0, 200.0, 200.0, 20.0,
+    200.0, 200.0, 200.0, 200.0,  0.0, 200.0, 200.0, 200.0, 200.0, 20.0,*/
+    200.0, 200.0, 200.0, 200.0,  200.0, 200.0, 200.0, 200.0, 200.0, 20.0,
 };
 
 #define MAP_WIDTH 10
@@ -53,80 +58,116 @@ i32 precision = 64;
 u8 fov = 60;
 
 void castRay(vector2D ray, float rayAngle, u32 x) {
+    /*if (rayAngle >= 360.0f)
+        rayAngle -= 360.0f;
+    else if (rayAngle < 0.0f)
+        rayAngle += 360.0f;*/
+    
+
+    
     float defaultHeight = (win->r.h / 4.0f);
 
     vector2D rayComp = VECTOR2D(cos(DEG2RAD * rayAngle) / precision, sin(DEG2RAD * rayAngle) / precision);
-    
-    do {   
-        vector2D next = vector_add(ray, rayComp);
+    vector2D next = vector_add(ray, rayComp);
 
+    do {   
         if (RSGL_rectCollidePointF(RSGL_RECTF(0, 0, MAP_WIDTH, MAP_HEIGHT), next) == false)
             break;
         
-        if (MAP_CORDV(ray) && HMAP_CORDV(ray) < HMAP_CORDV(next))
-            castRay(next, rayAngle, x);
-        
         ray = next; 
+        next = vector_add(ray, rayComp);
     } while (MAP_CORDV(ray) == 0 || HMAP_CORDV(ray) < HMAP_CORDV(vector_add(ray, rayComp)));
-    
-    RSGL_pointF rayI = ray;
 
     /* 
         get the distance, times the cos diff between the ray and the player  
         it is a quick fix to make sure the angle is properly lined up with the player view angle
     */           
+
     float distance = vector_dist(ray, player) * cos(DEG2RAD * (rayAngle - playerAngle));
     float wallHeight = (size_t)(float)((float)(defaultHeight / distance))  + HMAP_CORDV(ray);
     
-    if (RGFW_isPressedI(win, RGFW_Tab) == false) {                
-        RSGL_drawRectF(RSGL_RECTF(x, 0, 1, z + (defaultHeight - wallHeight)), RSGL_RGBA(0, 255, 255, 0));
-        RSGL_color color = RSGL_RGB(100, 100, 100);
-        
-        if (HMAP_CORDV(ray) == 20)
-            color = RSGL_RGB(255, 0, 0);
-        
-        RSGL_rectF r = RSGL_RECTF(x, z + (defaultHeight - wallHeight), 1, z + defaultHeight + wallHeight);
-        RSGL_point3DF points[] = {{r.x, r.y, 0.0f}, {r.x, r.y + r.h, 0.0f}, {r.x + r.w, r.y + r.h, 0.0f}, {r.x + r.w, r.y, 0.0f}};
-        RSGL_point3DF texPoints[] = {{((i32)ray.x) - ray.x, 0.0f, 0.0f}, {((i32)ray.x) - ray.x, 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1 , 1.0f, 0.0f}, {(((i32)ray.x) - ray.x) + 0.1, 0.0f, 0.0f}};
+    if (RGFW_isPressedI(win, RGFW_Tab))
+        RSGL_drawLineF(vector_mul(player, VECTOR2D(20, 20)), vector_mul(ray, VECTOR2D(20, 20)), 1, RSGL_RGBA(0, 255, 0, 100)); 
 
-        RSGL_basicDraw(RGL_QUADS_2D, (RSGL_point3DF*)points, (RSGL_point3DF*)texPoints, r, RSGL_RGB(255, 255, 255), 4);
-        RSGL_setTexture(MAP_CORDV(ray));  
-
-        RSGL_drawLineF(RSGL_POINTF(x, z + defaultHeight + wallHeight), RSGL_POINTF(x, win->r.h * 4), 1, RSGL_RGB(0, 255, 0));
-        RSGL_setTexture(1);
-    }
+    RSGL_drawRectF(RSGL_RECTF(x, 0, 1, z + (defaultHeight - wallHeight)), RSGL_RGBA(0, 255, 255, 255));
+    RSGL_setTexture(1);
     
-    else 
-        RSGL_drawLineF(vector_mul(player, VECTOR2D(20, 20)), vector_mul(ray, VECTOR2D(20, 20)), 1, RSGL_RGB(0, 255, 0));
+    if (MAP_CORDV(ray) && HMAP_CORDV(ray) < HMAP_CORDV(next))
+        castRay(next, rayAngle, x);
+    
+    {
+        RSGL_rectF r = RSGL_RECTF(x, z + (defaultHeight - wallHeight), 1, defaultHeight + wallHeight);
+        RSGL_point3DF points[] = {{r.x, r.y, 0.0f}, {r.x, r.y + r.h, 0.0f}, {r.x + r.w, r.y + r.h, 0.0f}, {r.x + r.w, r.y, 0.0f}};
+        RSGL_pointF texPointsUP[] = {{((i32)ray.x) - ray.x, 0.0f}, {((i32)ray.x) - ray.x, 1.0f}, {(((i32)ray.x) - ray.x) + 0.1 , 1.0f}, {(((i32)ray.x) - ray.x) + 0.1, 0.0f}};
+        RSGL_pointF texPointsSIDE[] = {{((i32)ray.y) - ray.y, 0.0f}, {((i32)ray.y) - ray.y, 1.0f}, {(((i32)ray.y) - ray.y) + 0.1 , 1.0f}, {(((i32)ray.y) - ray.y) + 0.1, 0.0f}};
+
+        RSGL_pointF* texPoints = texPointsUP;
+        if (RSGL_between(rayAngle, 204, 270) || RSGL_between(rayAngle, 0, 116))
+            texPoints = texPointsSIDE;
+
+        RSGL_setTexture(MAP_CORDV(ray));  
+        RSGL_basicDraw(RGL_QUADS_2D, (RSGL_point3DF*)points, (RSGL_pointF*)texPoints, r, RSGL_RGB(255, 255, 255), 4);
+    }
+
+    RSGL_setTexture(1);
+    RSGL_drawLineF(RSGL_POINTF(x, z + (defaultHeight - wallHeight) + defaultHeight + wallHeight), RSGL_POINTF(x, win->r.h * 4), 1, RSGL_RGB(0, 255, 0));
 }
 
 
 int main() {
     win = RSGL_createWindow("name", RSGL_RECT(0, 0, 640, 400), RGFW_CENTER | RSGL_HIDE_MOUSE);
-    //RGFW_window_moveMouse(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
 
     player = RSGL_POINTF(2, 2); 
     z = 0;
     float jumpZ = 0;
     playerAngle = 90;
 
+    u8 cursor = 0;
+
     float playerVelocity = 0.25;
 
-    u32 wallTexture = RSGL_loadImage("wall.png");
-    u32 wall2Texture = RSGL_loadImage("wall.jpg");
+    RSGL_loadImage("wall.png"); /* 2 */
+    RSGL_loadImage("wall.jpg"); /* 3 */
   
-//    RSGL_setFont(RSGL_loadFont("SansPosterBold.ttf"));
+    RSGL_setFont(RSGL_loadFont("SansPosterBold.ttf"));
 
-    bool running = true;
-
-    RSGL_point mouse = RSGL_POINT(win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
+    u8 running = true; /* 1 - running, 2 - paused*/
+  
     RGFW_window_moveMouse(win, win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
-
+    
     while (running) {
         while (RSGL_window_checkEvent(win)) {
-            if (win->event.type == RSGL_quit || RSGL_isPressedI(win, RGFW_Escape)) {
-                running = false;
+            if (win->event.type == RSGL_keyPressed && win->event.keyCode == RGFW_Escape) {
+                running = 1 + (running != 2);
+                continue;
+            }
+            
+            if (win->event.type == RSGL_quit) {
+                running = 0;
                 break;
+            }
+
+            if (running == 2) {
+                if (RGFW_isPressedI(win, RGFW_Up))
+                    cursor -= cursor ? 1 : -2;
+                if (RGFW_isPressedI(win, RGFW_Down))
+                    cursor += (cursor < 2) ? 1 : -2;
+                if (RGFW_isPressedI(win, RGFW_Return) == false)
+                    continue;
+                
+                switch (cursor) {
+                    case 0:
+                        running = 1;
+                        break;
+                    case 1:
+                        break;
+                    case 2:
+                        running = 0;
+                    default:
+                        break;
+                }       
+
+                continue;
             }
 
             /* simular to rayComp but for player movement */
@@ -135,15 +176,15 @@ int main() {
 
             if (win->event.type == RSGL_mousePosChanged) {
                 if (win->event.x > (win->r.w / 2))
-                    playerAngle += 2;
+                    playerAngle += 0.02 * win->event.fps;
                 if (win->event.x < (win->r.w / 2))
-                    playerAngle -= 2;
+                    playerAngle -= 0.02 * win->event.fps;
                 
                 if (win->event.y > (win->r.h / 2))
                     z -= 5;
                 if (win->event.y < (win->r.h / 2))
                     z += 5;
-                
+                           
                 RGFW_window_moveMouse(win, win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
             }
 
@@ -158,9 +199,9 @@ int main() {
                     player = vector_sub(player, playerCompLR);
 
                 else if (RSGL_isPressedI(win, RGFW_Left))
-                    playerAngle -= 5;
+                    playerAngle -= 0.02 * win->event.fps;
                 else if (RSGL_isPressedI(win, RGFW_Right))
-                    playerAngle += 5;
+                    playerAngle += 0.02 * win->event.fps;
                 
                 else if (RGFW_isPressedI(win, RGFW_Down) && z > -300)
                     z -= 5;
@@ -177,23 +218,42 @@ int main() {
             z -= 0.5;
         }
 
-        if (RGFW_isPressedI(win, RGFW_Tab)) {
-            for (int y = 0; y < MAP_HEIGHT; y++)
-                for (int x = 0; x < MAP_WIDTH; x++) {
-                    RSGL_drawRect(RSGL_RECT(20 * x, 20 * y, 20, 20), RSGL_RGB(MAP_CORD(x, y) ? 255 : 0, 0, 0));
-                }
-
-            RSGL_drawRect(RSGL_RECT(20 * player.x, 20 * player.y, 2, 2), RSGL_RGB(240, 220, 0));
-        }
         
+        if (win->event.inFocus && running != 2 && RSGL_rectCollidePoint(win->r, RSGL_window_getGlobalMousePoint(win)) == false)
+            RGFW_window_moveMouse(win, win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
+
+
+        if (playerAngle >= 365) 
+            playerAngle -= 360; 
+
+        if (playerAngle < 0)
+            playerAngle += 360;
+            
         float rayAngle = playerAngle - ((float)fov / 2.0f);
 
         for(size_t i = 0; i < win->r.w; i++) {
             castRay(player, rayAngle, i);
 
             rayAngle += ((float)fov / win->r.w);
+
+            if (RGFW_isPressedI(win, RGFW_Tab)) {
+                for (int y = 0; y < MAP_HEIGHT; y++)
+                    if (MAP_CORD(i, y))
+                        RSGL_drawRect(RSGL_RECT(20 * i, 20 * y, 20, 20), RSGL_RGBA(255, 0, 0, 50));
+
+                RSGL_drawRect(RSGL_RECT(20 * player.x, 20 * player.y, 2, 2), RSGL_RGBA(240, 220, 0, 50));
+            }
+
+            if (running != 2)
+                continue;
+            
+            RSGL_drawRect(RSGL_RECT(i, 0, 1, win->r.h), RSGL_RGBA(255, 255, 0, 150));
+            RSGL_drawText("Resume\nSettings\nExit", RSGL_CIRCLE(win->r.w / 4.0, win->r.h / 4.0, 40), RSGL_RGB(255, 0, 0));
+            RSGL_drawRect(RSGL_RECT((win->r.w / 4.0) - 25, (win->r.h / 4.0) + (40 * cursor) + 20, 20, 10), RSGL_RGB(255, 255, 0));
         }
-    
+        
+        RSGL_drawText(RSGL_strFmt("FPS : %i\nplayerAngle : %f", win->event.fps, playerAngle), RSGL_CIRCLE(win->r.w - 220, 20, 20), RSGL_RGB(255, 0, 0));
+
         RSGL_window_clear(win, RSGL_RGB(0, 0, 0));
     }
 
