@@ -113,7 +113,6 @@ void castRay(vector2D ray, float rayAngle, u32 x) {
     RSGL_drawLineF(RSGL_POINTF(x, z + (defaultHeight - wallHeight) + defaultHeight + wallHeight), RSGL_POINTF(x, win->r.h * 4), 1, RSGL_RGB(0, 255, 0));
 }
 
-
 int main() {
     win = RSGL_createWindow("name", RSGL_RECT(0, 0, 640, 400), RGFW_CENTER | RSGL_HIDE_MOUSE);
 
@@ -132,9 +131,9 @@ int main() {
     RSGL_setFont(RSGL_loadFont("SansPosterBold.ttf"));
 
     u8 running = true; /* 1 - running, 2 - paused*/
-  
-    RGFW_window_moveMouse(win, win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
     
+    RSGL_window_moveMouse(win, win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
+
     while (running) {
         while (RSGL_window_checkEvent(win)) {
             if (win->event.type == RSGL_keyPressed && win->event.keyCode == RGFW_Escape) {
@@ -184,7 +183,8 @@ int main() {
                     z -= 5;
                 if (win->event.y < (win->r.h / 2))
                     z += 5;
-                           
+                
+
                 RGFW_window_moveMouse(win, win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
             }
 
@@ -221,7 +221,6 @@ int main() {
         
         if (win->event.inFocus && running != 2 && RSGL_rectCollidePoint(win->r, RSGL_window_getGlobalMousePoint(win)) == false)
             RGFW_window_moveMouse(win, win->r.x + (win->r.w / 2), win->r.y + (win->r.h / 2));
-
 
         if (playerAngle >= 365) 
             playerAngle -= 360; 

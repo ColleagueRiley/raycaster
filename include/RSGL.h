@@ -22,7 +22,7 @@
 
 /*
     define args
-    (MAKE SURE RSGL_IMPLEMENTATION is in at least one header or you use -DRSGL_IMPLEMENTATION)
+    (MAKE SURE RSGL_IMPLEMENTATION is in exactly one header or you use -DRSGL_IMPLEMENTATION)
 	#define RSGL_IMPLEMENTATION - makes it so source code is included with header
     
     #define RSGL_NO_WINDOW - no RSGL_window, RSGL_graphics is used instead [this is for using a differnt window manager other than RGFW ]
@@ -295,8 +295,8 @@ RGFW_FUNCTION_DEFINES
 
 #define RSGL_isPressedI RGFW_isPressedI
 #define RSGL_isPressedS RGFW_isPressedS
-#define RSGL_window_readClipboard RGFW_window_readClipboard 
-#define RSGL_window_writeClipboard RGFW_window_writeClipboard
+#define RSGL_readClipboard RGFW_readClipboard
+#define RSGL_writeClipboard RGFW_writeClipboard
 #define RSGL_registerJoystickF RGFW_registerJoystickF
 #define RSGL_registerJoystick RGFW_registerJoystick
 #define RSGL_isPressedJS RGFW_isPressedJS
@@ -316,7 +316,7 @@ RGFW_FUNCTION_DEFINES
 #define RSGL_isMinimized RGFW_isMinimized
 #define RSGL_isMaximized RGFW_isMaximized
 #define RSGL_window_swapBuffers RGFW_window_swapBuffers
-#define RSGL_window_hideMouse RGFW_window_hideMouse
+#define RSGL_window_showMouse RGFW_window_showMouse
 #define RSGL_createThread RGFW_createThread
 
 RSGLDEF void RSGL_legacy(i32 legacy);
@@ -1140,8 +1140,8 @@ void RSGL_drawTriangleHyp(RSGL_pointF p, size_t angle, float hypotenuse, RSGL_co
     float dir = (hypotenuse > 0);
     hypotenuse = fabsf(hypotenuse);
 
-    float base = hypotenuse * (cos(angle) * RAD2DEG);
-    float opp = hypotenuse * (cos(angle) * RAD2DEG); 
+    float base = hypotenuse * (cos(angle) * DEG2RAD);
+    float opp = hypotenuse * (sin(angle) * DEG2RAD); 
     
     RSGL_triangleF t = RSGL_TRIANGLEF(
         p,
